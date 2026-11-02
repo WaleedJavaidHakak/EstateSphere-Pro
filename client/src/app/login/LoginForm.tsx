@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+
 import {
   Building2,
   Mail,
@@ -15,10 +16,10 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import api from '@/lib/axios';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -30,9 +31,11 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const returnUrl = searchParams.get('returnUrl') || '/';
 
-  const { isLoading } = useAuthStore();
+  const { login, isLoading } = useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -45,25 +48,24 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await api.post('/auth/login', {
-        email: data.email,
-        password: data.password,
-      });
+      // Use Zustand authentication store
+      await login(data.email, data.password);
 
-      const { token, user } = response.data;
+      // Get the authenticated user
+      const user = useAuthStore.getState().user;
 
-      if (!token || !user) {
-        throw new Error('Invalid login response from server.');
+      if (!user) {
+        throw new Error('Unable to retrieve user information.');
       }
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store additional user information
       localStorage.setItem('userRole', user.role);
-      localStorage.setItem('userId', user.id);
+      localStorage.setItem('userId', String((user as any)._id || (user as any).id || ''));
       localStorage.setItem('userName', user.name);
 
       toast.success(`Welcome back, ${user.name}!`);
 
+      // Redirect based on role or return URL
       if (returnUrl !== '/') {
         router.push(returnUrl);
       } else if (user.role === 'admin') {
@@ -86,15 +88,22 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+
+      {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex justify-center items-center gap-2 mb-8">
+        <Link
+          href="/"
+          className="flex justify-center items-center gap-2 mb-8"
+        >
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
             <Building2 className="w-6 h-6 text-white" />
           </div>
 
           <span className="font-bold text-2xl">
             <span className="text-primary">Real</span>Estate
-            <span className="text-primary text-sm font-semibold">Pro</span>
+            <span className="text-primary text-sm font-semibold">
+              Pro
+            </span>
           </span>
         </Link>
 
@@ -107,17 +116,20 @@ export default function LoginForm() {
         </p>
       </div>
 
+      {/* Login Form */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
         <div className="bg-card py-8 px-4 shadow-xl border border-border sm:rounded-2xl sm:px-10">
+
           <form
             className="space-y-6"
             onSubmit={handleSubmit(onSubmit)}
             noValidate
           >
+
             {/* Email */}
             <div>
               <label
@@ -138,7 +150,9 @@ export default function LoginForm() {
                   type="email"
                   autoComplete="email"
                   aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? 'login-email-error' : undefined}
+                  aria-describedby={
+                    errors.email ? 'login-email-error' : undefined
+                  }
                   className="block w-full pl-10 pr-3 py-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
                   placeholder="you@example.com"
                 />
@@ -184,7 +198,9 @@ export default function LoginForm() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? 'login-password-error' : undefined}
+                  aria-describedby={
+                    errors.password ? 'login-password-error' : undefined
+                  }
                   className="block w-full pl-10 pr-10 py-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
                   placeholder="••••••••"
                 />
@@ -192,7 +208,9 @@ export default function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={
+                    showPassword ? 'Hide password' : 'Show password'
+                  }
                   aria-pressed={showPassword}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
@@ -215,7 +233,7 @@ export default function LoginForm() {
               )}
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading || isSubmitting}
@@ -230,8 +248,10 @@ export default function LoginForm() {
                 </>
               )}
             </button>
+
           </form>
 
+          {/* Registration Link */}
           <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -254,6 +274,7 @@ export default function LoginForm() {
               </Link>
             </div>
           </div>
+
         </div>
       </motion.div>
     </div>

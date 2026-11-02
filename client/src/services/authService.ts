@@ -1,25 +1,37 @@
+
 import api from '@/lib/axios';
 import { User } from '@/types';
 
 export const authService = {
   async register(data: { name: string; email: string; password: string; role?: string }) {
     const res = await api.post('/auth/register', data);
+
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+    }
+
     return res.data;
   },
 
   async login(data: { email: string; password: string }) {
     const res = await api.post('/auth/login', data);
+
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
     }
+
     return res.data;
   },
 
   async logout() {
-    await api.post('/auth/logout');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
   },
 
   async getProfile() {
