@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2, MapPin, Shield, Star, Users } from 'lucide-react';
+import { ArrowRight, Building2, Shield, Users } from 'lucide-react';
 import { propertyService } from '@/services/propertyService';
 import { Property } from '@/types';
 import PropertyCard from '@/components/properties/PropertyCard';
@@ -19,34 +20,50 @@ export default function Home() {
   const { user } = useAuthStore();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchHomeData = async () => {
       try {
-        const [featured, recent] = await Promise.all([
+        const [featuredResult, recentResult] = await Promise.all([
           propertyService.getProperties({ featured: true, limit: 3 }),
-          propertyService.getProperties({ sort: 'newest', limit: 6 })
+          propertyService.getProperties({ sort: 'newest', limit: 6 }),
         ]);
-        setFeaturedProperties(featured.properties);
-        setRecentProperties(recent.properties);
+
+        if (!isMounted) return;
+
+        const featured = featuredResult?.properties || [];
+        const recent = recentResult?.properties || [];
+
+        // Show latest listings if no properties are marked as featured.
+        setFeaturedProperties(featured.length > 0 ? featured : recent.slice(0, 3));
+        setRecentProperties(recent);
       } catch (error) {
-        console.error('Failed to fetch home properties', error);
+        console.error('Failed to fetch home properties:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchHomeData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <div className="min-h-screen">
+
       {/* Hero Section */}
       <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600"
-            alt="Hero Background"
+            alt="Premium Indian residential property"
             fill
             className="object-cover"
             priority
+            unoptimized
           />
           <div className="absolute inset-0 hero-overlay" />
         </div>
@@ -59,11 +76,15 @@ export default function Home() {
             className="mb-8"
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-lg leading-tight">
-              Find Your Dream Home <br className="hidden md:block" />
-              in Pakistan
+              Find Your Dream Home
+              <br className="hidden md:block" />
+              in India
             </h1>
+
             <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto drop-shadow-md">
-              Discover thousands of premium properties for sale and rent across the country. Your perfect space is just a search away.
+              Discover premium properties for sale and rent across India.
+              From modern apartments in Bengaluru to luxury villas in Mumbai,
+              your perfect home is just a search away.
             </p>
           </motion.div>
 
@@ -71,10 +92,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats/Features Section */}
+      {/* Stats Section */}
       <section className="py-16 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -84,10 +106,13 @@ export default function Home() {
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-7 h-7 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-2">10k+ Properties</h3>
-              <p className="text-muted-foreground text-sm">Explore a vast selection of premium homes and commercial spaces.</p>
+              <h3 className="text-xl font-bold mb-2">Indian Properties</h3>
+              <p className="text-muted-foreground text-sm">
+                Explore houses, apartments, villas and commercial properties
+                across major Indian cities.
+              </p>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -99,9 +124,12 @@ export default function Home() {
                 <Shield className="w-7 h-7 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-2">Verified Listings</h3>
-              <p className="text-muted-foreground text-sm">Every property on our platform is thoroughly vetted for authenticity.</p>
+              <p className="text-muted-foreground text-sm">
+                Discover property listings with detailed information
+                to help you make informed decisions.
+              </p>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -113,8 +141,12 @@ export default function Home() {
                 <Users className="w-7 h-7 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-2">Expert Agents</h3>
-              <p className="text-muted-foreground text-sm">Connect with top-rated real estate professionals in your area.</p>
+              <p className="text-muted-foreground text-sm">
+                Connect with real estate professionals to find
+                your ideal property.
+              </p>
             </motion.div>
+
           </div>
         </div>
       </section>
@@ -122,12 +154,21 @@ export default function Home() {
       {/* Featured Properties */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="flex justify-between items-end mb-10">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Featured Properties</h2>
-              <p className="text-muted-foreground">Handpicked premium listings just for you</p>
+              <h2 className="text-3xl font-bold mb-2">
+                Featured Properties
+              </h2>
+              <p className="text-muted-foreground">
+                Explore selected properties across India
+              </p>
             </div>
-            <Link href="/properties?featured=true" className="hidden sm:flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
+
+            <Link
+              href="/properties?featured=true"
+              className="hidden sm:flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
+            >
               View all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -146,21 +187,39 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-10 bg-muted/30 rounded-2xl border border-border border-dashed">
-              <p className="text-muted-foreground">No featured properties found.</p>
+              <p className="text-muted-foreground">
+                No properties are available yet.
+              </p>
+              <Link
+                href="/properties"
+                className="inline-block mt-4 text-primary font-semibold"
+              >
+                Browse all properties
+              </Link>
             </div>
           )}
+
         </div>
       </section>
 
-      {/* Recent Properties */}
+      {/* Newest Listings */}
       <section className="py-20 bg-muted/30 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="flex justify-between items-end mb-10">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Newest Listings</h2>
-              <p className="text-muted-foreground">The latest properties added to our platform</p>
+              <h2 className="text-3xl font-bold mb-2">
+                Newest Indian Listings
+              </h2>
+              <p className="text-muted-foreground">
+                Recently added properties from across India
+              </p>
             </div>
-            <Link href="/properties?sort=newest" className="hidden sm:flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
+
+            <Link
+              href="/properties?sort=newest"
+              className="hidden sm:flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
+            >
               Browse all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -179,36 +238,56 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-10 bg-muted/30 rounded-2xl border border-border border-dashed">
-              <p className="text-muted-foreground">No recent properties found.</p>
+              <p className="text-muted-foreground">
+                No recent properties found.
+              </p>
             </div>
           )}
-          
+
           <div className="mt-12 text-center sm:hidden">
-            <Link href="/properties" className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all">
+            <Link
+              href="/properties"
+              className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all"
+            >
               View All Properties
+            </Link>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-20 relative overflow-hidden bg-primary">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Ready to find your next home in India?
+          </h2>
+
+          <p className="text-primary-foreground/80 text-lg mb-8 max-w-2xl mx-auto">
+            Explore properties, save your favourite listings and connect
+            with real estate agents to find your perfect home.
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/register"
+              className="px-8 py-3.5 bg-white text-primary font-bold rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all"
+            >
+              Sign Up Now
+            </Link>
+
+            <Link
+              href="/properties"
+              className="px-8 py-3.5 bg-primary-foreground/10 text-white border border-primary-foreground/20 font-bold rounded-xl hover:bg-primary-foreground/20 transition-all"
+            >
+              Browse Indian Properties
             </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden bg-primary">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to find your next home?</h2>
-          <p className="text-primary-foreground/80 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied users who found their perfect property through our platform. Create an account to save favorites and contact agents instantly.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/register" className="px-8 py-3.5 bg-white text-primary font-bold rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all">
-              Sign Up Now
-            </Link>
-            <Link href="/properties" className="px-8 py-3.5 bg-primary-foreground/10 text-white border border-primary-foreground/20 font-bold rounded-xl hover:bg-primary-foreground/20 transition-all">
-              Browse Properties
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

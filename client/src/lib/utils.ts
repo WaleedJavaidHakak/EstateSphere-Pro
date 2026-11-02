@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -6,17 +7,20 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(price: number, status?: string): string {
+  const suffix = status === 'rent' ? '/month' : '';
+
   if (price >= 10000000) {
-    return `PKR ${(price / 10000000).toFixed(1)} Crore${status === 'rent' ? '/mo' : ''}`;
+    return `₹${(price / 10000000).toFixed(2)} Crore${suffix}`;
   } else if (price >= 100000) {
-    return `PKR ${(price / 100000).toFixed(1)} Lac${status === 'rent' ? '/mo' : ''}`;
+    return `₹${(price / 100000).toFixed(2)} Lakh${suffix}`;
   }
-  return `PKR ${price.toLocaleString()}${status === 'rent' ? '/mo' : ''}`;
+
+  return `₹${price.toLocaleString('en-IN')}${suffix}`;
 }
 
 export function formatArea(area?: number): string {
   if (!area) return 'N/A';
-  return `${area.toLocaleString()} sq ft`;
+  return `${area.toLocaleString('en-IN')} sq ft`;
 }
 
 export function truncate(str: string, length: number): string {
@@ -33,15 +37,25 @@ export function getInitials(name: string): string {
 }
 
 export function timeAgo(date: string | Date): string {
-  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  const seconds = Math.floor(
+    (new Date().getTime() - new Date(date).getTime()) / 1000
+  );
+
   const intervals: [number, string][] = [
-    [31536000, 'year'], [2592000, 'month'], [86400, 'day'],
-    [3600, 'hour'], [60, 'minute'],
+    [31536000, 'year'],
+    [2592000, 'month'],
+    [86400, 'day'],
+    [3600, 'hour'],
+    [60, 'minute'],
   ];
+
   for (const [secs, label] of intervals) {
     const count = Math.floor(seconds / secs);
-    if (count >= 1) return `${count} ${label}${count > 1 ? 's' : ''} ago`;
+    if (count >= 1) {
+      return `${count} ${label}${count > 1 ? 's' : ''} ago`;
+    }
   }
+
   return 'just now';
 }
 
@@ -57,15 +71,45 @@ export const PROPERTY_TYPES = [
 ];
 
 export const AMENITIES_LIST = [
-  'Swimming Pool', 'Gym', 'Parking', 'Garden', 'Balcony', 'Security',
-  'Elevator', 'Air Conditioning', 'Heating', 'Internet', 'Laundry',
-  'Pet Friendly', 'Furnished', 'Unfurnished', 'Solar Panels', 'Generator',
+  'Swimming Pool',
+  'Gym',
+  'Parking',
+  'Garden',
+  'Balcony',
+  'Security',
+  'Elevator',
+  'Air Conditioning',
+  'Heating',
+  'Internet',
+  'Laundry',
+  'Pet Friendly',
+  'Furnished',
+  'Unfurnished',
+  'Solar Panels',
+  'Generator',
 ];
 
-export const PAKISTANI_CITIES = [
-  'Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad',
-  'Peshawar', 'Multan', 'Quetta', 'Sialkot', 'Gujranwala',
-  'Hyderabad', 'Abbottabad', 'Bahawalpur', 'Sargodha', 'Sukkur',
+export const INDIAN_CITIES = [
+  'Bengaluru',
+  'Mumbai',
+  'New Delhi',
+  'Hyderabad',
+  'Chennai',
+  'Pune',
+  'Kolkata',
+  'Jaipur',
+  'Ahmedabad',
+  'Surat',
+  'Lucknow',
+  'Chandigarh',
+  'Srinagar',
+  'Jammu',
+  'Indore',
+  'Bhopal',
+  'Kochi',
+  'Mysuru',
+  'Noida',
+  'Gurugram',
 ];
 
 export const STATUS_COLORS: Record<string, string> = {

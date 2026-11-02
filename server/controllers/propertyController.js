@@ -9,11 +9,21 @@ const uploadToCloudinary = (buffer) =>
       {
         folder: 'realestate',
         transformation: [
-          { width: 1200, height: 800, crop: 'limit', quality: 'auto' },
+          {
+            width: 1200,
+            height: 800,
+            crop: 'limit',
+            quality: 'auto',
+          },
         ],
       },
       (error, result) => {
         if (error) return reject(error);
+
+        if (!result) {
+          return reject(new Error('Cloudinary image upload failed'));
+        }
+
         resolve(result);
       }
     );
@@ -21,54 +31,136 @@ const uploadToCloudinary = (buffer) =>
     stream.end(buffer);
   });
 
-// @desc    Get all properties with filters & pagination
+// Parse JSON fields safely
+const parseJsonField = (value, fieldName) => {
+  if (typeof value !== 'string') return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    const error = new Error(`Invalid ${fieldName} format`);
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+// @desc    Get all properties with filters and pagination
 // @route   GET /api/properties
 // @access  Public
 exports.getProperties = async (req, res, next) => {
   try {
     const {
-      keyword, city, type, status, bedrooms, bathrooms,
-      minPrice, maxPrice, sort, page = 1, limit = 9, featured,
+      keyword,
+      city,
+      type,
+      status,
+      bedrooms,
+      bathrooms,
+      minPrice,
+      maxPrice,
+      sort,
+      featured,
     } = req.query;
+
+    const page = req.query.page;
+    const limit = req.query.limit;
 
     const query = {};
 
+    // Keyword search
     if (keyword) {
+      const searchRegex = {
+        $regex: String(keyword),
+        $options: 'i',
+      };
+
       query.$or = [
-        { title: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } },
-        { 'location.city': { $regex: keyword, $options: 'i' } },
-        { 'location.address': { $regex: keyword, $options: 'i' } },
+        { title: searchRegex },
+        { description: searchRegex },
+        { 'location.city': searchRegex },
+        { 'location.address': searchRegex },
       ];
     }
 
-    if (city) query['location.city'] = { $regex: city, $options: 'i' };
-    if (type) query.type = type;
-    if (status) query.status = status;
-    if (bedrooms) query.bedrooms = { $gte: parseInt(bedrooms) };
-    if (bathrooms) query.bathrooms = { $gte: parseInt(bathrooms) };
-
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseInt(minPrice);
-      if (maxPrice) query.price.$lte = parseInt(maxPrice);
+    // City filter
+    if (city) {
+      query['location.city'] = {
+        $regex: String(city),
+        $options: 'i',
+      };
     }
 
-    if (featured === 'true') query.isFeatured = true;
+    // Property filters
+    if (type) query.type = type;
+    if (status) query.status = status;
+
+    if (bedrooms) {
+      query.bedrooms = {
+        $gte: Math.max(0, parseInt(bedrooms, 10) || 0),
+      };
+    }
+
+    if (bathrooms) {
+      query.bathrooms = {
+        $gte: Math.max(0, parseInt(bathrooms, 10) || 0),
+      };
+    }
+
+    // Price range
+    if (minPrice || maxPrice) {
+      query.price = {};
+
+      if (minPrice) {
+        query.price.$gte = Math.max(0, Number(minPrice));
+      }
+
+      if (maxPrice) {
+        query.price.$lte = Math.max(0, Number(maxPrice));
+      }
+
+      if (
+        !Number.isFinite(query.price.$gte ?? 0) ||
+        !Number.isFinite(query.price.$lte ?? 0)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid price range',
+        });
+      }
+    }
+
+    // Featured listings
+    if (featured === 'true') {
+      query.isFeatured = true;
+    }
+
+    // Only approved properties are publicly visible
     query.isApproved = true;
 
-    // Sort
+    // Sorting
     let sortOption = { createdAt: -1 };
 
-    if (sort === 'price_asc') sortOption = { price: 1 };
-    else if (sort === 'price_desc') sortOption = { price: -1 };
-    else if (sort === 'newest') sortOption = { createdAt: -1 };
-    else if (sort === 'oldest') sortOption = { createdAt: 1 };
+    if (sort === 'price_asc') {
+      sortOption = { price: 1 };
+    } else if (sort === 'price_desc') {
+      sortOption = { price: -1 };
+    } else if (sort === 'newest') {
+      sortOption = { createdAt: -1 };
+    } else if (sort === 'oldest') {
+      sortOption = { createdAt: 1 };
+    }
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    // Pagination validation
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+
+    const limitNum = Math.min(
+      50,
+      Math.max(1, parseInt(limit, 10) || 9)
+    );
+
     const skip = (pageNum - 1) * limitNum;
 
+    // Fetch properties and count in parallel
     const [properties, total] = await Promise.all([
       Property.find(query)
         .populate('agent', 'name email avatar phone')
@@ -76,6 +168,7 @@ exports.getProperties = async (req, res, next) => {
         .skip(skip)
         .limit(limitNum)
         .lean(),
+
       Property.countDocuments(query),
     ]);
 
@@ -107,12 +200,12 @@ exports.getProperty = async (req, res, next) => {
       });
     }
 
-    // Increment views
+    // Increment property views
     await Property.findByIdAndUpdate(req.params.id, {
       $inc: { views: 1 },
     });
 
-    // Related properties
+    // Find related properties
     const related = await Property.find({
       _id: { $ne: property._id },
       'location.city': property.location.city,
@@ -139,24 +232,37 @@ exports.getProperty = async (req, res, next) => {
 exports.createProperty = async (req, res, next) => {
   try {
     const body = { ...req.body };
+
+    // Always assign the authenticated user as the agent
     body.agent = req.user.id;
 
-    if (typeof body.location === 'string') {
-      body.location = JSON.parse(body.location);
+    // Parse incoming JSON fields
+    body.location = parseJsonField(body.location, 'location');
+    body.features = parseJsonField(body.features, 'features');
+    body.amenities = parseJsonField(body.amenities, 'amenities');
+
+    // Validate location
+    if (!body.location || typeof body.location !== 'object') {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid property location is required',
+      });
     }
 
-    if (typeof body.features === 'string') {
-      body.features = JSON.parse(body.features);
-    }
-
-    if (typeof body.amenities === 'string') {
-      body.amenities = JSON.parse(body.amenities);
-    }
+    // All newly created listings belong to the Indian market
+    body.location = {
+      ...body.location,
+      country: 'India',
+    };
 
     // Upload images to Cloudinary
     if (req.files && req.files.length > 0) {
       body.images = await Promise.all(
         req.files.map(async (file) => {
+          if (!file.buffer) {
+            throw new Error('Invalid image file');
+          }
+
           const result = await uploadToCloudinary(file.buffer);
 
           return {
@@ -168,6 +274,7 @@ exports.createProperty = async (req, res, next) => {
     }
 
     const property = await Property.create(body);
+
     await property.populate('agent', 'name email avatar');
 
     res.status(201).json({
@@ -206,22 +313,30 @@ exports.updateProperty = async (req, res, next) => {
 
     const body = { ...req.body };
 
-    if (typeof body.location === 'string') {
-      body.location = JSON.parse(body.location);
-    }
+    // Prevent ownership changes
+    delete body.agent;
 
-    if (typeof body.features === 'string') {
-      body.features = JSON.parse(body.features);
-    }
+    // Parse incoming JSON fields
+    body.location = parseJsonField(body.location, 'location');
+    body.features = parseJsonField(body.features, 'features');
+    body.amenities = parseJsonField(body.amenities, 'amenities');
 
-    if (typeof body.amenities === 'string') {
-      body.amenities = JSON.parse(body.amenities);
+    // Keep the property in the Indian market
+    if (body.location) {
+      body.location = {
+        ...body.location,
+        country: 'India',
+      };
     }
 
     // Upload new images to Cloudinary
     if (req.files && req.files.length > 0) {
       const newImages = await Promise.all(
         req.files.map(async (file) => {
+          if (!file.buffer) {
+            throw new Error('Invalid image file');
+          }
+
           const result = await uploadToCloudinary(file.buffer);
 
           return {
@@ -231,7 +346,10 @@ exports.updateProperty = async (req, res, next) => {
         })
       );
 
-      body.images = [...(property.images || []), ...newImages];
+      body.images = [
+        ...(property.images || []),
+        ...newImages,
+      ];
     }
 
     property = await Property.findByIdAndUpdate(
@@ -266,6 +384,7 @@ exports.deleteProperty = async (req, res, next) => {
       });
     }
 
+    // Check ownership
     if (
       property.agent.toString() !== req.user.id &&
       req.user.role !== 'admin'
@@ -276,7 +395,7 @@ exports.deleteProperty = async (req, res, next) => {
       });
     }
 
-    // Delete images from Cloudinary
+    // Delete associated images from Cloudinary
     if (property.images && property.images.length > 0) {
       await Promise.all(
         property.images.map((img) =>
@@ -303,15 +422,17 @@ exports.deleteProperty = async (req, res, next) => {
 // @access  Private (Agent)
 exports.getMyProperties = async (req, res, next) => {
   try {
-    const properties = await Property.find({ agent: req.user.id })
+    const properties = await Property.find({
+      agent: req.user.id,
+    })
       .populate('agent', 'name email avatar phone bio role')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: properties.length,
-      properties: properties.map((p) =>
-        p.toObject ? p.toObject() : p
+      properties: properties.map((property) =>
+        property.toObject ? property.toObject() : property
       ),
     });
   } catch (err) {
@@ -321,7 +442,7 @@ exports.getMyProperties = async (req, res, next) => {
 
 // @desc    Delete image from property
 // @route   DELETE /api/properties/:id/images/:imageId
-// @access  Private
+// @access  Private (Agent who owns it, Admin)
 exports.deletePropertyImage = async (req, res, next) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -333,6 +454,7 @@ exports.deletePropertyImage = async (req, res, next) => {
       });
     }
 
+    // Check ownership
     if (
       property.agent.toString() !== req.user.id &&
       req.user.role !== 'admin'
@@ -354,10 +476,12 @@ exports.deletePropertyImage = async (req, res, next) => {
       });
     }
 
+    // Remove image from Cloudinary
     if (image.public_id) {
       await cloudinary.uploader.destroy(image.public_id);
     }
 
+    // Remove image from MongoDB
     property.images = property.images.filter(
       (img) => img._id.toString() !== req.params.imageId
     );
@@ -366,7 +490,7 @@ exports.deletePropertyImage = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Image deleted',
+      message: 'Image deleted successfully',
       property,
     });
   } catch (err) {

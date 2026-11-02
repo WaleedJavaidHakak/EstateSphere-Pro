@@ -1,5 +1,15 @@
+
 import Link from 'next/link';
-import { Building2, Mail, Phone, MapPin, Globe, Share2, Camera, Briefcase } from 'lucide-react';
+import {
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  Share2,
+  Camera,
+  Briefcase,
+} from 'lucide-react';
 
 const footerLinks = {
   company: [
@@ -34,42 +44,60 @@ export default function Footer() {
     <footer className="bg-card border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
+
               <span className="font-bold text-xl">
-                <span className="text-primary">Real</span>Estate<span className="text-primary text-sm font-semibold">Pro</span>
+                <span className="text-primary">Real</span>
+                Estate
+                <span className="text-primary text-sm font-semibold">
+                  Pro
+                </span>
               </span>
             </Link>
+
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-xs">
-              Pakistan's premier real estate platform. Find your dream property or list yours with ease. Trusted by thousands of buyers, sellers, and agents.
+              India's modern real estate platform. Discover your dream
+              property, explore residential and commercial listings, or
+              connect with trusted property agents across India.
             </p>
+
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>DHA Phase 5, Karachi, Pakistan</span>
+                <span>Bengaluru, Karnataka, India</span>
               </div>
+
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>+92-21-111-ESTATE</span>
+                <span>Contact our team through the Contact page</span>
               </div>
+
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>hello@realestatepro.pk</span>
+                <span>Contact us through our website</span>
               </div>
             </div>
           </div>
 
-          {/* Links */}
+          {/* Company */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">Company</h3>
+            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">
+              Company
+            </h3>
+
             <ul className="space-y-2.5">
               {footerLinks.company.map(({ href, label }) => (
                 <li key={label}>
-                  <Link href={href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link
+                    href={href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
                     {label}
                   </Link>
                 </li>
@@ -77,12 +105,19 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Property Types */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">Property Types</h3>
+            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">
+              Property Types
+            </h3>
+
             <ul className="space-y-2.5">
               {footerLinks.propertyTypes.map(({ href, label }) => (
                 <li key={label}>
-                  <Link href={href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link
+                    href={href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
                     {label}
                   </Link>
                 </li>
@@ -90,12 +125,19 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Support */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">Support</h3>
+            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-4">
+              Support
+            </h3>
+
             <ul className="space-y-2.5">
               {footerLinks.support.map(({ href, label }) => (
                 <li key={label}>
-                  <Link href={href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link
+                    href={href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
                     {label}
                   </Link>
                 </li>
@@ -107,8 +149,10 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground text-center sm:text-left">
-            © {new Date().getFullYear()} RealEstate Pro. All rights reserved. Built with ❤️ in Pakistan.
+            © {new Date().getFullYear()} RealEstate Pro. All rights reserved.
+            Built with ❤️ in India.
           </p>
+
           <div className="flex items-center gap-3">
             {socials.map(({ icon: Icon, href, label }) => (
               <a
