@@ -62,7 +62,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-xs">
-              India's modern real estate platform. Discover your dream
+              India's modern 	Walestate  platform. Discover your dream
               property, explore residential and commercial listings, or
               connect with trusted property agents across India.
             </p>

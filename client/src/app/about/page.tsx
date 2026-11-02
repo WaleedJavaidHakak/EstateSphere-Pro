@@ -20,7 +20,7 @@ export default function AboutPage() {
           </h1>
 
           <p className="text-lg text-muted-foreground">
-            We are an Indian real estate platform dedicated to helping
+            We are an Indian 	Walestate platform dedicated to helping
             you discover your dream home, find the right property investment,
             and connect with property professionals across India.
           </p>
@@ -63,7 +63,7 @@ export default function AboutPage() {
               At RealEstate Pro, our mission is to simplify the property
               journey across India. Whether you are buying your first home,
               searching for a rental apartment, selling a property, or
-              exploring commercial real estate, we provide a platform
+              exploring commercial 	Walestate, we provide a platform
               to discover properties and connect with agents.
             </p>
 

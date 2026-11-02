@@ -142,7 +142,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-2">Expert Agents</h3>
               <p className="text-muted-foreground text-sm">
-                Connect with real estate professionals to find
+                Connect with 	Walestate professionals to find
                 your ideal property.
               </p>
             </motion.div>
@@ -267,7 +267,7 @@ export default function Home() {
 
           <p className="text-primary-foreground/80 text-lg mb-8 max-w-2xl mx-auto">
             Explore properties, save your favourite listings and connect
-            with real estate agents to find your perfect home.
+            with 	Walestate agents to find your perfect home.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">

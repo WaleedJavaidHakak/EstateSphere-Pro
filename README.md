@@ -1,6 +1,6 @@
-# 🏡 Real Estate Pro — SaaS Property Management Platform
+# 🏡 	Walestate  Pro — SaaS Property Management Platform
 
-A modern, full-stack SaaS real estate management system built with the MERN stack and Next.js.  
+A modern, full-stack SaaS 	Walestate management system built with the MERN stack and Next.js.  
 Designed for managing property listings, users, and administrative workflows in a scalable and efficient way.
 
 ---
@@ -196,7 +196,7 @@ Users
 ### 👨‍💻 Author
 
 Built by a solo developer using MERN + Next.js
-A production-style SaaS real estate management platform.
+A production-style SaaS Walestate management platform.
 
 ### 📄 License
 

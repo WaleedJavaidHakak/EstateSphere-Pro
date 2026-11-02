@@ -14,14 +14,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'RealEstate Pro — Premium Property Listings in India',
-    template: '%s | RealEstate Pro',
+    default: 'Walestate — Premium Property Listings in India',
+    template: '%s | Walestate',
   },
   description:
-    'Find your dream property with RealEstate Pro. Browse premium houses, apartments, villas and commercial properties for sale and rent across India.',
+    'Find your dream property with Walestate. Browse houses, apartments, villas and commercial properties for sale and rent across India.',
   keywords: [
-    'real estate India',
-    'property',
+    'Walestate',
+    'property India',
     'houses',
     'apartments',
     'villas',
@@ -32,15 +32,15 @@ export const metadata: Metadata = {
     'Mumbai',
     'New Delhi',
   ],
-  authors: [{ name: 'RealEstate Pro' }],
+  authors: [{ name: 'Walestate' }],
   openGraph: {
     type: 'website',
     locale: 'en_IN',
     url: process.env.NEXT_PUBLIC_APP_URL,
-    siteName: 'RealEstate Pro',
-    title: 'RealEstate Pro — Premium Property Listings in India',
+    siteName: 'Walestate',
+    title: 'Walestate — Premium Property Listings in India',
     description:
-      'Find your dream property in India. Explore verified properties for sale and rent.',
+      'Find your dream property in India. Explore properties for sale and rent with Walestate.',
   },
 };
 

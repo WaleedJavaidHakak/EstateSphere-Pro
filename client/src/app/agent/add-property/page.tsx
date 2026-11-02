@@ -147,7 +147,7 @@ export default function AddPropertyPage() {
       <div>
         <h1 className="text-3xl font-bold">Add New Property</h1>
         <p className="text-muted-foreground mt-1">
-          Fill out the details to list your property on our Indian real estate platform.
+          Fill out the details to list your property on our Indian 	Walestate platform.
         </p>
       </div>
 

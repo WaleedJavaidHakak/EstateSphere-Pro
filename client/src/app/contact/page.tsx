@@ -67,7 +67,7 @@ export default function ContactPage() {
                       Phone Number
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      +91 XXXXX XXXXX
+                      +91 7889708988
                     </p>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export default function ContactPage() {
                       Email Address
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      hello@estatesphere.in
+                      temp@walestate.com
                     </p>
                   </div>
                 </div>

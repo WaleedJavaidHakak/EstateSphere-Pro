@@ -93,7 +93,7 @@ const seedDB = async () => {
       isApproved: true,
       isActive: true,
       phone: '+91-9876543210',
-      bio: 'Real estate consultant specializing in residential properties across Bengaluru and Mumbai.',
+      bio: '	Walestate consultant specializing in residential properties across Bengaluru and Mumbai.',
     }));
 
     agents.push(await ensureUser({
@@ -104,7 +104,7 @@ const seedDB = async () => {
       isApproved: true,
       isActive: true,
       phone: '+91-9876501234',
-      bio: 'Property consultant specializing in luxury homes and commercial real estate in India.',
+      bio: 'Property consultant specializing in luxury homes and commercial 	Walestate in India.',
     }));
 
     const regularUsers = [];

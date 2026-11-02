@@ -88,7 +88,7 @@ export default function RegisterPage() {
               `}>
                 <input type="radio" value="agent" {...register('role')} className="sr-only" />
                 <Briefcase className={`w-6 h-6 mb-2 ${selectedRole === 'agent' ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className="text-sm font-semibold">Real Estate Agent</span>
+                <span className="text-sm font-semibold">	Walestate Agent</span>
               </label>
             </div>
 
