@@ -1,16 +1,51 @@
+
 require('dotenv').config();
+
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const User = require('./models/User');
-const Property = require('./models/Property');
-const Inquiry = require('./models/Inquiry');
+const User = require('../models/User');
+const Property = require('../models/Property');
+const Inquiry = require('../models/Inquiry');
+const connectDB = require('../config/db');
 
-const connectDB = require('./config/db');
+const cities = [
+  { name: 'Bengaluru', state: 'Karnataka', pin: '560001', coords: [77.5946, 12.9716] },
+  { name: 'Mumbai', state: 'Maharashtra', pin: '400001', coords: [72.8777, 19.0760] },
+  { name: 'New Delhi', state: 'Delhi', pin: '110001', coords: [77.2090, 28.6139] },
+  { name: 'Hyderabad', state: 'Telangana', pin: '500001', coords: [78.4867, 17.3850] },
+  { name: 'Srinagar', state: 'Jammu and Kashmir', pin: '190001', coords: [74.7973, 34.0837] },
+  { name: 'Pune', state: 'Maharashtra', pin: '411001', coords: [73.8567, 18.5204] },
+  { name: 'Chennai', state: 'Tamil Nadu', pin: '600001', coords: [80.2707, 13.0827] },
+  { name: 'Jaipur', state: 'Rajasthan', pin: '302001', coords: [75.7873, 26.9124] },
+];
 
-const cities = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Peshawar', 'Multan', 'Quetta'];
-const types = ['house', 'apartment', 'condo', 'villa', 'townhouse', 'commercial'];
-const amenitiesList = ['Swimming Pool', 'Gym', 'Parking', 'Garden', 'Balcony', 'Security', 'Air Conditioning', 'Internet'];
-const featuresList = ['Marble Floors', 'Open Kitchen', 'Master Suite', 'Walk-in Closet', 'Smart Home', 'Solar Panels'];
+const types = [
+  'house',
+  'apartment',
+  'condo',
+  'villa',
+  'townhouse',
+  'commercial',
+];
+
+const amenitiesList = [
+  'Swimming Pool',
+  'Gym',
+  'Parking',
+  'Garden',
+  'Balcony',
+  'Security',
+  'Air Conditioning',
+  'Internet',
+];
+
+const featuresList = [
+  'Marble Floors',
+  'Open Kitchen',
+  'Master Suite',
+  'Walk-in Closet',
+  'Smart Home',
+  'Solar Panels',
+];
 
 const sampleImages = [
   { public_id: 'sample1', url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200' },
@@ -21,119 +56,153 @@ const sampleImages = [
   { public_id: 'sample6', url: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200' },
 ];
 
+// Preserve existing users. Create demo accounts only when missing.
+async function ensureUser(data) {
+  let user = await User.findOne({ email: data.email });
+
+  if (!user) {
+    user = await User.create(data);
+  }
+
+  return user;
+}
+
 const seedDB = async () => {
   try {
     await connectDB();
-    console.log('🧹 Clearing existing data...');
-    await User.deleteMany({});
-    await Property.deleteMany({});
-    await Inquiry.deleteMany({});
 
-    console.log('👤 Creating users...');
+    console.log('🇮🇳 Preparing Indian property listings...');
 
-    // Admin
-    const admin = await User.create({
-      name: 'Admin User',
+    const admin = await ensureUser({
+      name: 'EstateSphere Admin',
       email: 'admin@realestate.com',
       password: 'admin123',
       role: 'admin',
       isApproved: true,
       isActive: true,
-      bio: 'Platform administrator',
+      bio: 'EstateSphere platform administrator',
     });
 
-    // Agents
-    const agents = await User.create([
-      {
-        name: 'Ahmed Khan',
-        email: 'ahmed@realestate.com',
-        password: 'agent123',
-        role: 'agent',
-        isApproved: true,
-        phone: '+92-301-1234567',
-        bio: 'Expert real estate agent with 10+ years of experience in Karachi and Lahore.',
-      },
-      {
-        name: 'Sara Ali',
-        email: 'sara@realestate.com',
-        password: 'agent123',
-        role: 'agent',
-        isApproved: true,
-        phone: '+92-321-9876543',
-        bio: 'Specialized in luxury properties and commercial real estate in Islamabad.',
-      },
-      {
-        name: 'Bilal Mahmood',
-        email: 'bilal@realestate.com',
-        password: 'agent123',
-        role: 'agent',
-        isApproved: false, // pending approval
-        phone: '+92-333-5551234',
-        bio: 'New agent specializing in affordable housing in Faisalabad.',
-      },
-    ]);
+    const agents = [];
 
-    // Regular users
-    const users = await User.create([
-      { name: 'Usman Tariq', email: 'usman@example.com', password: 'user123', role: 'user' },
-      { name: 'Fatima Zahra', email: 'fatima@example.com', password: 'user123', role: 'user' },
-      { name: 'Ali Hassan', email: 'ali@example.com', password: 'user123', role: 'user' },
-    ]);
+    agents.push(await ensureUser({
+      name: 'Rahul Sharma',
+      email: 'ahmed@realestate.com',
+      password: 'agent123',
+      role: 'agent',
+      isApproved: true,
+      isActive: true,
+      phone: '+91-9876543210',
+      bio: 'Real estate consultant specializing in residential properties across Bengaluru and Mumbai.',
+    }));
 
-    console.log('🏠 Creating properties...');
+    agents.push(await ensureUser({
+      name: 'Priya Kapoor',
+      email: 'sara@realestate.com',
+      password: 'agent123',
+      role: 'agent',
+      isApproved: true,
+      isActive: true,
+      phone: '+91-9876501234',
+      bio: 'Property consultant specializing in luxury homes and commercial real estate in India.',
+    }));
+
+    const regularUsers = [];
+
+    regularUsers.push(await ensureUser({
+      name: 'Arjun Mehta',
+      email: 'usman@example.com',
+      password: 'user123',
+      role: 'user',
+    }));
+
+    regularUsers.push(await ensureUser({
+      name: 'Ananya Sharma',
+      email: 'fatima@example.com',
+      password: 'user123',
+      role: 'user',
+    }));
+
+    regularUsers.push(await ensureUser({
+      name: 'Aarav Khan',
+      email: 'ali@example.com',
+      password: 'user123',
+      role: 'user',
+    }));
+
+    // Remove old property listings and only their associated inquiries.
+    const oldProperties = await Property.find({}, '_id');
+    const oldPropertyIds = oldProperties.map(property => property._id);
+
+    if (oldPropertyIds.length > 0) {
+      await Inquiry.deleteMany({
+        property: { $in: oldPropertyIds },
+      });
+
+      await Property.deleteMany({
+        _id: { $in: oldPropertyIds },
+      });
+    }
+
+    console.log('🏠 Creating Indian properties...');
 
     const propertyData = [];
-    const coords = {
-      Karachi: [67.0099, 24.8607],
-      Lahore: [74.3587, 31.5204],
-      Islamabad: [73.0479, 33.6844],
-      Rawalpindi: [73.0479, 33.5651],
-      Faisalabad: [73.0901, 31.4180],
-      Peshawar: [71.5249, 34.0151],
-      Multan: [71.4729, 30.1575],
-      Quetta: [66.9750, 30.1798],
-    };
 
     for (let i = 0; i < 30; i++) {
       const city = cities[i % cities.length];
       const type = types[i % types.length];
-      const agent = agents[i % 2]; // only approved agents
+      const agent = agents[i % agents.length];
+
       const status = i % 3 === 0 ? 'rent' : 'sale';
       const bedrooms = (i % 5) + 1;
       const bathrooms = Math.max(1, bedrooms - 1);
+
+      // Sale prices: ₹35 lakh to ₹2.5 crore.
+      // Rental prices: ₹15,000 to ₹80,000 per month.
       const price = status === 'rent'
-        ? Math.floor(Math.random() * 150000 + 20000)
-        : Math.floor(Math.random() * 50000000 + 2000000);
+        ? Math.floor(Math.random() * 65000 + 15000)
+        : Math.floor(Math.random() * 21500000 + 3500000);
+
+      const latitude = city.coords[1] + (Math.random() * 0.04 - 0.02);
+      const longitude = city.coords[0] + (Math.random() * 0.04 - 0.02);
 
       propertyData.push({
-        title: `${bedrooms} Bed ${type.charAt(0).toUpperCase() + type.slice(1)} in ${city}`,
-        description: `Beautiful and spacious ${type} located in the heart of ${city}. This property features modern architecture, premium finishes, and top-of-the-line amenities. Perfect for families looking for comfort and style. The property is well-connected to major roads, schools, hospitals, and shopping centers.`,
+        title: `${bedrooms} BHK ${type.charAt(0).toUpperCase() + type.slice(1)} in ${city.name}`,
+
+        description: `Discover this beautiful ${type} in ${city.name}, ${city.state}, India. This property offers modern architecture, spacious interiors, quality finishes and convenient access to schools, hospitals, public transport, shopping centres and major roads. An excellent option for families and property investors.`,
+
         price,
         type,
         status,
         bedrooms,
         bathrooms,
-        area: Math.floor(Math.random() * 3000 + 800),
-        yearBuilt: Math.floor(Math.random() * 20 + 2005),
+
+        area: Math.floor(Math.random() * 2200 + 800),
+        yearBuilt: Math.floor(Math.random() * 15 + 2010),
         garage: i % 3,
-        floors: i % 4 + 1,
+        floors: (i % 4) + 1,
+
         location: {
-          address: `House ${i + 1}, Block ${String.fromCharCode(65 + (i % 10))}, DHA Phase ${(i % 8) + 1}`,
-          city,
-          province: city === 'Karachi' ? 'Sindh' : city === 'Lahore' || city === 'Faisalabad' || city === 'Multan' ? 'Punjab' : city === 'Peshawar' ? 'KPK' : city === 'Quetta' ? 'Balochistan' : 'Punjab',
-          country: 'Pakistan',
-          zipCode: `${Math.floor(Math.random() * 90000 + 10000)}`,
+          address: `${10 + i}, ${['Indiranagar', 'Whitefield', 'Koramangala', 'HSR Layout', 'Jubilee Hills', 'Andheri', 'Baner', 'Rohini'][i % 8]}, ${city.name}`,
+          city: city.name,
+          province: city.state,
+          country: 'India',
+          zipCode: city.pin,
+
           coordinates: {
             type: 'Point',
-            coordinates: [
-              coords[city][0] + (Math.random() * 0.1 - 0.05),
-              coords[city][1] + (Math.random() * 0.1 - 0.05),
-            ],
+            coordinates: [longitude, latitude],
           },
         },
+
         features: featuresList.slice(0, (i % 4) + 2),
         amenities: amenitiesList.slice(0, (i % 5) + 2),
-        images: [sampleImages[i % sampleImages.length], sampleImages[(i + 1) % sampleImages.length]],
+
+        images: [
+          sampleImages[i % sampleImages.length],
+          sampleImages[(i + 1) % sampleImages.length],
+        ],
+
         agent: agent._id,
         isFeatured: i < 6,
         isApproved: true,
@@ -143,52 +212,57 @@ const seedDB = async () => {
 
     const properties = await Property.insertMany(propertyData);
 
-    console.log('📨 Creating inquiries...');
+    console.log('📨 Creating sample inquiries...');
+
     await Inquiry.create([
       {
         property: properties[0]._id,
-        user: users[0]._id,
+        user: regularUsers[0]._id,
         agent: agents[0]._id,
-        name: users[0].name,
-        email: users[0].email,
-        phone: '+92-300-1234567',
+        name: regularUsers[0].name,
+        email: regularUsers[0].email,
+        phone: '+91-9876543210',
         message: 'I am interested in this property. Can we schedule a viewing this weekend?',
         status: 'pending',
       },
       {
         property: properties[1]._id,
-        user: users[1]._id,
-        agent: agents[0]._id,
-        name: users[1].name,
-        email: users[1].email,
-        message: 'Is the price negotiable? I would like to discuss further.',
+        user: regularUsers[1]._id,
+        agent: agents[1]._id,
+        name: regularUsers[1].name,
+        email: regularUsers[1].email,
+        message: 'Is the property price negotiable? I would like to discuss further.',
         status: 'read',
       },
       {
         property: properties[2]._id,
-        user: users[2]._id,
-        agent: agents[1]._id,
-        name: users[2].name,
-        email: users[2].email,
-        phone: '+92-333-9876543',
-        message: 'What utilities are included in the rental price? Is it furnished?',
-        status: 'replied',
+        user: regularUsers[2]._id,
+        agent: agents[0]._id,
+        name: regularUsers[2].name,
+        email: regularUsers[2].email,
+        phone: '+91-9876501234',
+        message: 'Can you share more details about the property and its amenities?',
+        status: 'pending',
       },
     ]);
 
-    console.log('\n✅ Database seeded successfully!\n');
-    console.log('📋 Test Credentials:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('👑 Admin:   admin@realestate.com   / admin123');
-    console.log('🏢 Agent 1: ahmed@realestate.com   / agent123');
-    console.log('🏢 Agent 2: sara@realestate.com    / agent123');
-    console.log('👤 User 1:  usman@example.com      / user123');
-    console.log('👤 User 2:  fatima@example.com     / user123');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('\n✅ Indian property listings created successfully!');
+    console.log(`🏠 Properties created: ${properties.length}`);
+    console.log('🌍 Country: India');
+    console.log('💰 Currency: INR (₹)');
+    console.log('👥 Existing user accounts preserved.');
+    console.log('\nDemo login credentials (only if these accounts were newly created):');
+    console.log('Admin: admin@realestate.com / admin123');
+    console.log('Agent: ahmed@realestate.com / agent123');
+    console.log('Agent: sara@realestate.com / agent123');
 
+    await mongoose.disconnect();
     process.exit(0);
-  } catch (err) {
-    console.error('❌ Seeding failed:', err);
+
+  } catch (error) {
+    console.error('❌ Seeding failed:', error);
+
+    await mongoose.disconnect();
     process.exit(1);
   }
 };
